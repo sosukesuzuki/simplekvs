@@ -38,7 +38,7 @@ func NewSimpleKVS(file string) (*SimpleKVS, error)
 ### func Close(kvs \*SimpleKVS)
 
 ```go
-func Close(kvs *SimpleKVS) error
+func (kvs *SimpleKVS) Close() error
 ```
 
 ### func (kvs \*SimpleKVS) Set(k string, v string)
@@ -51,4 +51,10 @@ func (kvs *SimpleKVS) Set(k string, v string) error
 
 ```go
 func (kvs *SimpleKVS) Get(k string)
+```
+
+### func (kvs \*SimpleKVS) Delete(k string) error
+
+```go
+func (kvs *SimpleKVS) Delete(k string) error
 ```
