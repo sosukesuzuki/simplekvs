@@ -1,4 +1,4 @@
-package main
+package simplekvs
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ func (e *SimpleKVSError) Unwrap() error {
 	return e.err
 }
 
-func Close(kvs *SimpleKVS) error {
+func (kvs *SimpleKVS) Close() error {
 	err := kvs.f.Close()
 	return err
 }
