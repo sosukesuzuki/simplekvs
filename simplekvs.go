@@ -1,8 +1,9 @@
-package simplekvs
+package main
 
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Idx map[string]int
@@ -14,7 +15,6 @@ type SimpleKVS struct {
 
 func NewSimpleKVS(file string) (*SimpleKVS, error) {
 	f, err := os.Create(file)
-	defer f.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 
 	// バリュー長の書き込み
 	if n, err := kvs.f.WriteAt(
-		[]byte([]uint8{uint8(len(v))}),
+		[]byte(fmt.Sprintf("%d", len(v))),
 		pos,
 	); err == nil {
 		pos += int64(n)
@@ -66,7 +66,7 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 
 	// キー長の書き込み
 	if n, err := kvs.f.WriteAt(
-		[]byte([]uint8{uint8(len(k))}),
+		[]byte(fmt.Sprintf("%d", len(k))),
 		pos,
 	); err == nil {
 		pos += int64(n)
@@ -87,9 +87,10 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 }
 
 func (kvs *SimpleKVS) Get(k string) (string, error) {
-	pos := kvs.idx[k]
+	pos, ok := kvs.idx[k]
+
 	// インデックスの中にキーに対応するポジションがなければエラー
-	if pos == 0 {
+	if !ok {
 		return "", &SimpleKVSError{
 			err: nil,
 			msg: fmt.Sprintf("Failed to find key %s in Get", k),
@@ -97,14 +98,14 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 	}
 
 	// ファイルをposまでSeekする
-	s1, err := kvs.f.Seek(int64(pos), 0)
-	_ = s1
+	s, err := kvs.f.Seek(int64(pos), 0)
 	if err != nil {
 		return "", &SimpleKVSError{
 			err: err,
 			msg: "Failed to seek file in Get",
 		}
 	}
+	fmt.Printf("Seek %d\n", s)
 
 	// 1バイト分をvalue_lengthに読み込む
 	// これがバリューの長さに該当する
@@ -113,30 +114,22 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 	if err != nil {
 		return "", &SimpleKVSError{
 			err: err,
-			msg: "Failed to read file in Get",
+			msg: "Failed to read value_length in Get",
 		}
 	}
-
-	// value_lengthのバイト数(1バイト)分だけSeekする
-	s2, err := kvs.f.Seek(int64(n1), 2)
-	_ = s2
-	if err != nil {
-		return "", &SimpleKVSError{
-			err: err,
-			msg: "Failed to seek file in Get",
-		}
-	}
+	fmt.Printf("Read %d\n", n1)
 
 	// value_length分をvalueに読み込む
-	value := make([]byte, value_length[0])
+	value_length_i, err := strconv.Atoi(string(value_length))
+	value := make([]byte, value_length_i)
 	n2, err := kvs.f.Read(value)
-	_ = n2
 	if err != nil {
 		return "", &SimpleKVSError{
 			err: err,
-			msg: "Failed to read file in Get",
+			msg: "Failed to read value in Get",
 		}
 	}
+	fmt.Printf("Read %d\n", n2)
 
 	return string(value), nil
 }
@@ -147,4 +140,38 @@ func (kvs *SimpleKVS) Update(k string, v string) error {
 
 func (kvs *SimpleKVS) Delete(k string) error {
 	return nil
+}
+
+func main() {
+	kvs, err := NewSimpleKVS("foo")
+	if err != nil {
+		panic(err)
+	}
+	err = kvs.Set("foo", "baaarn")
+	if err != nil {
+		panic(err)
+	}
+
+	err = kvs.Set("kokekoke", "berobero")
+	if err != nil {
+		panic(err)
+	}
+
+	r, err := kvs.Get("foo")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("結果 %s\n", r)
+
+	r2, err := kvs.Get("foo")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("結果 %s\n", r2)
+
+	r3, err := kvs.Get("kokekoke")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("結果 %s\n", r3)
 }
