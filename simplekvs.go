@@ -1,6 +1,9 @@
 package simplekvs
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type Idx map[string]int
 
@@ -22,7 +25,64 @@ func NewSimpleKVS(file string) (*SimpleKVS, error) {
 	}, nil
 }
 
+type SimpleKVSError struct {
+	msg string
+	err error
+}
+
+func (e *SimpleKVSError) Error() string {
+	return fmt.Sprintf("Error from SimpleKVS: %s (%s)", e.msg, e.err.Error())
+}
+
+func (e *SimpleKVSError) Unwrap() error {
+	return e.err
+}
+
 func (kvs *SimpleKVS) Set(k string, v string) error {
+	s, err := kvs.f.Stat()
+	if err != nil {
+		return &SimpleKVSError{err: err, msg: "Failed to get stat in Set"}
+	}
+
+	pos := s.Size()
+	iniPos := pos
+
+	// バリューの書き込み
+	if n, err := kvs.f.WriteAt([]byte(v), pos); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
+	}
+
+	// バリュー長の書き込み
+	if n, err := kvs.f.WriteAt(
+		[]byte([]uint8{uint8(len(v))}),
+		pos,
+	); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
+	}
+
+	// キーの書き込み
+	if n, err := kvs.f.WriteAt([]byte(k), pos); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
+	}
+
+	// キー長の書き込み
+	if n, err := kvs.f.WriteAt(
+		[]byte([]uint8{uint8(len(k))}),
+		pos,
+	); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
+	}
+
+	kvs.idx[k] = int(iniPos)
+
 	return nil
 }
 
