@@ -47,13 +47,6 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 	pos := s.Size()
 	iniPos := pos
 
-	// バリューの書き込み
-	if n, err := kvs.f.WriteAt([]byte(v), pos); err == nil {
-		pos += int64(n)
-	} else {
-		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
-	}
-
 	// バリュー長の書き込み
 	if n, err := kvs.f.WriteAt(
 		[]byte([]uint8{uint8(len(v))}),
@@ -64,8 +57,8 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
 	}
 
-	// キーの書き込み
-	if n, err := kvs.f.WriteAt([]byte(k), pos); err == nil {
+	// バリューの書き込み
+	if n, err := kvs.f.WriteAt([]byte(v), pos); err == nil {
 		pos += int64(n)
 	} else {
 		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
@@ -76,6 +69,13 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 		[]byte([]uint8{uint8(len(k))}),
 		pos,
 	); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
+	}
+
+	// キーの書き込み
+	if n, err := kvs.f.WriteAt([]byte(k), pos); err == nil {
 		pos += int64(n)
 	} else {
 		return &SimpleKVSError{err: err, msg: "Failed to write bytes in Set"}
