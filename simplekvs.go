@@ -139,10 +139,6 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 	return string(value), nil
 }
 
-func (kvs *SimpleKVS) Update(k string, v string) error {
-	return nil
-}
-
 func (kvs *SimpleKVS) Delete(k string) error {
 	return nil
 }
