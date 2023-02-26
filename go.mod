@@ -1,3 +1,3 @@
-module github.com/sosukesuzuki/simple-kvs
+module github.com/sosukesuzuki/simplekvs
 
 go 1.19

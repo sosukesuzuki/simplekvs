@@ -1,9 +1,25 @@
 package simplekvs
 
-type SimpleKVS struct {}
+import "os"
 
-func NewSimpleKVS() *SimpleKVS {
-  return &SimpleKVS{}
+type Idx map[string]int
+
+type SimpleKVS struct {
+	f   *os.File
+	idx Idx
+}
+
+func NewSimpleKVS(file string) (*SimpleKVS, error) {
+	f, err := os.Create(file)
+	defer f.Close()
+	if err != nil {
+		return nil, err
+	}
+	idx := map[string]int{}
+	return &SimpleKVS{
+		f:   f,
+		idx: idx,
+	}, nil
 }
 
 func (kvs *SimpleKVS) Set() {}
