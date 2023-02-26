@@ -140,5 +140,55 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 }
 
 func (kvs *SimpleKVS) Delete(k string) error {
+	s, err := kvs.f.Stat()
+	if err != nil {
+		return &SimpleKVSError{
+			err: err,
+			msg: "Delete中にファイルのStatに失敗した",
+		}
+	}
+
+	pos := s.Size()
+	iniPos := pos
+
+	// バリュー長の書き込み
+	// 今回は 0
+	if n, err := kvs.f.WriteAt(
+		[]byte(fmt.Sprintf("%d", 0)),
+		pos,
+	); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{
+			err: err,
+			msg: "Delete中にバリュー長の書き込みに失敗",
+		}
+	}
+
+	// キー長の書き込み
+	if n, err := kvs.f.WriteAt(
+		[]byte(fmt.Sprintf("%d", len(k))),
+		pos,
+	); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{
+			err: err,
+			msg: "Delete中にキー長の書き込みに失敗",
+		}
+	}
+
+	// キーの書き込み
+	if n, err := kvs.f.WriteAt([]byte(k), pos); err == nil {
+		pos += int64(n)
+	} else {
+		return &SimpleKVSError{
+			err: err,
+			msg: "Delete中にキーの書き込みに失敗",
+		}
+	}
+
+	kvs.idx[k] = int(iniPos)
+
 	return nil
 }
