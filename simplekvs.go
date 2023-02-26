@@ -87,7 +87,58 @@ func (kvs *SimpleKVS) Set(k string, v string) error {
 }
 
 func (kvs *SimpleKVS) Get(k string) (string, error) {
-	return "", nil
+	pos := kvs.idx[k]
+	// インデックスの中にキーに対応するポジションがなければエラー
+	if pos == 0 {
+		return "", &SimpleKVSError{
+			err: nil,
+			msg: fmt.Sprintf("Failed to find key %s in Get", k),
+		}
+	}
+
+	// ファイルをposまでSeekする
+	s1, err := kvs.f.Seek(int64(pos), 0)
+	_ = s1
+	if err != nil {
+		return "", &SimpleKVSError{
+			err: err,
+			msg: "Failed to seek file in Get",
+		}
+	}
+
+	// 1バイト分をvalue_lengthに読み込む
+	// これがバリューの長さに該当する
+	value_length := make([]byte, 1)
+	n1, err := kvs.f.Read(value_length)
+	if err != nil {
+		return "", &SimpleKVSError{
+			err: err,
+			msg: "Failed to read file in Get",
+		}
+	}
+
+	// value_lengthのバイト数(1バイト)分だけSeekする
+	s2, err := kvs.f.Seek(int64(n1), 2)
+	_ = s2
+	if err != nil {
+		return "", &SimpleKVSError{
+			err: err,
+			msg: "Failed to seek file in Get",
+		}
+	}
+
+	// value_length分をvalueに読み込む
+	value := make([]byte, value_length[0])
+	n2, err := kvs.f.Read(value)
+	_ = n2
+	if err != nil {
+		return "", &SimpleKVSError{
+			err: err,
+			msg: "Failed to read file in Get",
+		}
+	}
+
+	return string(value), nil
 }
 
 func (kvs *SimpleKVS) Update(k string, v string) error {
