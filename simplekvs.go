@@ -38,6 +38,11 @@ func (e *SimpleKVSError) Unwrap() error {
 	return e.err
 }
 
+func Close(kvs *SimpleKVS) error {
+	err := kvs.f.Close()
+	return err
+}
+
 func (kvs *SimpleKVS) Set(k string, v string) error {
 	s, err := kvs.f.Stat()
 	if err != nil {
@@ -107,7 +112,7 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 	}
 	fmt.Printf("Seek %d\n", s)
 
-	// 1バイト分をvalue_lengthに読み込む
+	// 後続のバリューの長さをvalue_lengthに読み込む
 	// これがバリューの長さに該当する
 	value_length := make([]byte, 1)
 	n1, err := kvs.f.Read(value_length)
@@ -140,38 +145,4 @@ func (kvs *SimpleKVS) Update(k string, v string) error {
 
 func (kvs *SimpleKVS) Delete(k string) error {
 	return nil
-}
-
-func main() {
-	kvs, err := NewSimpleKVS("foo")
-	if err != nil {
-		panic(err)
-	}
-	err = kvs.Set("foo", "baaarn")
-	if err != nil {
-		panic(err)
-	}
-
-	err = kvs.Set("kokekoke", "berobero")
-	if err != nil {
-		panic(err)
-	}
-
-	r, err := kvs.Get("foo")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("結果 %s\n", r)
-
-	r2, err := kvs.Get("foo")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("結果 %s\n", r2)
-
-	r3, err := kvs.Get("kokekoke")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("結果 %s\n", r3)
 }
