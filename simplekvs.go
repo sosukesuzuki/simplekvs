@@ -22,10 +22,18 @@ func NewSimpleKVS(file string) (*SimpleKVS, error) {
 	}, nil
 }
 
-func (kvs *SimpleKVS) Set() {}
+func (kvs *SimpleKVS) Set(k string, v string) error {
+	return nil
+}
 
-func (kvs *SimpleKVS) Get() {}
+func (kvs *SimpleKVS) Get(k string) (string, error) {
+	return "", nil
+}
 
-func (kvs *SimpleKVS) Update() {}
+func (kvs *SimpleKVS) Update(k string, v string) error {
+	return nil
+}
 
-func (kvs *SimpleKVS) Delete() {}
+func (kvs *SimpleKVS) Delete(k string) error {
+	return nil
+}
