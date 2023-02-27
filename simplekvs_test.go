@@ -19,6 +19,16 @@ func TestSimpleKVS(t *testing.T) {
 		calls []Call
 	}{
 		{
+			name: "Setしていない値をGetすると空文字が返ってくる",
+			calls: []Call{
+				{
+					method: "get",
+					args: []string{"foo"},
+					wantRet: "",
+				},
+			},
+		},
+		{
 			name: "Setした値をGetできる",
 			calls: []Call{
 				{

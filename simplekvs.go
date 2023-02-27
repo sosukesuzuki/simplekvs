@@ -96,10 +96,7 @@ func (kvs *SimpleKVS) Get(k string) (string, error) {
 
 	// インデックスの中にキーに対応するポジションがなければエラー
 	if !ok {
-		return "", &SimpleKVSError{
-			err: nil,
-			msg: fmt.Sprintf("Failed to find key %s in Get", k),
-		}
+		return "", nil
 	}
 
 	// ファイルをposまでSeekする
